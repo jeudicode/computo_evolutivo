@@ -6,7 +6,7 @@ Roulette-based selection
 Random mutation
 Optional elitism
 """
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 import random as rand
 import math
@@ -14,35 +14,32 @@ import math
 
 class BaseGA:
 
-    def __init__(self, init_pop = 2, dim = 1, max_cycles = 1, max_pop_size = 4, mut_rate = 0, opc = 1, elitism = 0):
+    def __init__(self, init_pop = 2, dim = 1, max_cycles = 1, opc = 1):
 
         rand.seed()
 
-        self.elitism = elitism
-        self.max_pop_size = max_pop_size
+        self.best = []
+
+        #self.max_pop_size = max_pop_size
         self.opc = opc
         self.pop_size = init_pop
         self.dim = dim
-        self.mut_rate = mut_rate
         # set max and min values
         if self.opc == 1:
             self.min = -5.12
             self.max = 5.12
-            r = (self.max * 2) * 100
+            r = (self.max * 2) * 10000
             self.length = math.floor(math.log2(r)) * self.dim
         elif self.opc == 2:
             self.min = -5.00
             self.max = 5.00
-            r = (self.max * 2) * 100
+            r = (self.max * 2) * 10000
             self.length = math.floor(math.log2(r)) * 2
         elif self.opc == 3:
             self.min = -512.00
             self.max = 512.00
-            r = (self.max * 2) * 100
+            r = (self.max * 2) * 10000
             self.length = math.floor(math.log2(r)) * 2
-
-
-        print("len: ", self.length)
 
         self.max_cycles = max_cycles
 
@@ -79,47 +76,47 @@ class BaseGA:
 
         print("******** INITIAL POPULATION ********")
         for ind in self.population:
-            print(ind)
-            # print(str(ind['x']) + " " + str(ind['eval']) + "\n")
+            # print(ind)
+            print(str(ind['x']) + " " + str(ind['eval']) + " " + str(ind['fitness']) + "\n")
 
     def selection(self):
-        total_fitness = 0
-        total_prob = 0
 
-        for ind in self.population:
-            # print(ind['eval'])
-            total_fitness += ind['eval']
+        self.selected = []
 
-        # print("\nTotal fitness: ", total_fitness)
+        # roulette selection
+        # total_fitness = 0
+        # total_prob = 0
 
-        for ind in self.population:
-            prob_ind = ((ind['eval'] / total_fitness))
-            ind['prob'] = prob_ind
-            total_prob += prob_ind
-        
-        # print("\n******** Probability Count ********")
         # for ind in self.population:
-        #     print(ind)
+        #     # print(ind['eval'])
+        #     total_fitness += ind['fitness']
 
-        self.taken = []
+        # rel = [ind['fitness']/total_fitness for ind in self.population]
+        # probs = [sum(rel[:i+1]) for i in range(len(rel))]
 
-        while len(self.taken) < len(self.population):
-            r = rand.random()
-            for ind in self.population:
-                if r >= ind['prob']:
-                    self.taken.append(ind)
-                    break
         
-        # print("\nTAKEN: \n")
-        # for ind in self.taken:
-        #     print(ind)
 
+        # while len(self.selected) < len(self.population):
+        #     r = rand.random()
+        #     for (i, ind)in enumerate(self.population):
+        #         if r <= probs[i]:
+        #             self.selected.append(ind)
+        #             break
+
+        ########### Tournament selection
+        for i in range(len(self.population)):
+            r = rand.randrange(0, len(self.population))
+            if self.population[i]['fitness'] >= self.population[r]['fitness']:
+                self.selected.append(self.population[i])
+            else:
+                self.selected.append(self.population[r])
+      
+
+       
 
     def crossover(self):
-        for ind in self.population:
+        for (i, ind) in enumerate(self.selected):
 
-            # print("current: ", ind)
-            partner = 0 # partner to be paired with
             if self.opc == 1:
                 first = {
                     'genes': [],
@@ -155,23 +152,30 @@ class BaseGA:
 
             cross_point = rand.randrange(len(ind['genes']))
 
-            # print("\n crosspoint: ", cross_point)
+            if i % 2 == 0:
+                partner = i + 1
+            else: 
+                partner = i -1
+            
+            if i == len(self.selected) - 1:
+                partner = 0
 
             first['genes'] += (ind['genes'][0:cross_point])
-            first['genes'] += (self.taken[partner]['genes'][cross_point:])
+            first['genes'] += (self.selected[partner]['genes'][cross_point:self.length])
 
-            second['genes'] += (self.taken[partner]['genes'][0:cross_point])
-            second['genes'] += (ind['genes'][cross_point:])
+            second['genes'] += (self.selected[partner]['genes'][0:cross_point])
+            second['genes'] += (ind['genes'][cross_point:self.length])
             
-            if len(self.children) < self.max_pop_size:
+            if len(self.children) < self.pop_size:
                 self.children.append(first)
-            if len(self.children) < self.max_pop_size:
+            if len(self.children) < self.pop_size:
                 self.children.append(second)
 
-            partner += 1
+      
 
+        
     def mutation(self):
-        rate = 1 / self.length
+        rate = 0.1 / self.length
         for child in self.children:
             rand_gene = rand.randrange(self.length)
 
@@ -207,18 +211,22 @@ class BaseGA:
 
         individual['eval'] = factor + s
 
+        individual['fitness'] = 1 / (individual['eval'] + 0.00001) 
+
         self.count += 1 # update call counter
 
-        if self.count == 20000 or self.count == 20000 or self.count == 20000:
-            print("\nThe population: ")
-            for ind in self.population:
-                print(ind)
+        # if self.count == 20000 or self.count == 100000 or self.count == 200000:
+        #     print("\nThe population: ")
+        #     for ind in self.population:
+        #         print(ind)
 
         return individual
 
     def himmelblau(self, individual):
         individual['eval'] = (individual['x'] ** 2 + individual['y'] -
                               11) ** 2 + (individual['x'] + individual['y'] ** 2 - 7) ** 2
+
+        individual['fitness'] = 1 / individual['eval']
         
         self.count += 1 # update call counter
 
@@ -229,7 +237,9 @@ class BaseGA:
 
         individual['eval'] = (individual['y'] + 47) * math.sin(math.sqrt(abs((individual['x'] / 2) + (
             individual['y'] + 47)))) - individual['x'] * math.sin(math.sqrt(abs(individual['x'] - (individual['y'] + 47))))
-        
+
+         
+        individual['fitness'] = -individual['eval']
         self.count += 1 # update call counter
 
 
@@ -248,15 +258,15 @@ class BaseGA:
                 s1 = ""
                 for i in range(len(chunk)):
                     s1 += str(chunk[i])
-                x = self.min + 0.01 * int(s1, 2)
+                x = self.min + 0.0001 * int(s1, 2)
                 individual['x'].append(x)
         else:
             for i in range(int(len(individual['genes']) / 2)):
                 s1 += str(individual['genes'][i])
             for i in range(int(len(individual['genes']) / 2), len(individual['genes'])):
                 s2 += str(individual['genes'][i])
-            x = self.min + 0.01 * int(s1, 2)
-            y = self.min + 0.01 * int(s2, 2)
+            x = self.min + 0.0001 * int(s1, 2)
+            y = self.min + 0.0001 * int(s2, 2)
             individual['x'] = x
             individual['y'] = y
 
@@ -265,9 +275,9 @@ class BaseGA:
 
 def main():
 
-    d = BaseGA(500, 3, 200000, 1000, 0.05, 3)
+    d = BaseGA(100, 2, 500, 1)
     g = 0
-    while(d.count <= d.max_cycles):
+    while(g < d.max_cycles):
         d.selection()
         d.crossover()
         d.mutation()
