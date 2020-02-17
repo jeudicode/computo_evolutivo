@@ -6,231 +6,282 @@ Roulette-based selection
 Random mutation
 Optional elitism
 """
+import matplotlib.pyplot as plt
+
 import random as rand
 import math
 
+
 class BaseGA:
 
-    def __init__(self, init_pop = 2, max_cycles = 1, mut_rate = 0.001, opc = 1):
+    def __init__(self, init_pop = 2, dim = 1, max_cycles = 1, max_pop_size = 4, mut_rate = 0, opc = 1, elitism = 0):
 
+        rand.seed()
+
+        self.elitism = elitism
+        self.max_pop_size = max_pop_size
         self.opc = opc
         self.pop_size = init_pop
-
+        self.dim = dim
+        self.mut_rate = mut_rate
         # set max and min values
         if self.opc == 1:
-            self.min = -5.1200
-            self.max = 5.1200
-            r = (self.max * 2) * 10000
-            self.length = math.ceil(math.log2(r))
+            self.min = -5.12
+            self.max = 5.12
+            r = (self.max * 2) * 100
+            self.length = math.floor(math.log2(r)) * self.dim
         elif self.opc == 2:
-            self.min = -5.0000
-            self.max = 5.0000
-             r = (self.max * 2) * 10000
-             self.length = math.ceil(math.log2(r)) * 2
+            self.min = -5.00
+            self.max = 5.00
+            r = (self.max * 2) * 100
+            self.length = math.floor(math.log2(r)) * 2
         elif self.opc == 3:
-            self.min = -512.0000
-            self.max = 512.0000
-            r = (self.max * 2) * 10000
-            self.length = math.ceil(math.log2(r)) * 2
-        
-       
+            self.min = -512.00
+            self.max = 512.00
+            r = (self.max * 2) * 100
+            self.length = math.floor(math.log2(r)) * 2
+
+
+        print("len: ", self.length)
 
         self.max_cycles = max_cycles
 
-        self.count = 0 # benchmark function calls
+        self.count = 0  # benchmark function calls
 
-        self.population = [
-            {
-                'genes': 
-                   [rand.randrange(0,1) for i in range(self.length)],
-                'eval': 0.,
-                'x': 0.,
-                'y': 0.,
-                'prob': 0.,
-                'fitness': 0.
-            } for x in range(init_pop)]
-        
+        if opc == 1:
+            self.population = [
+                {
+                    'genes':
+                    [rand.randint(0, 1) for i in range(self.length)],
+                    'eval': 0.,
+                    'x': [],
+                    'prob': 0.,
+                    'fitness': 0.
+                } for x in range(init_pop)]
+        else:
+            self.population = [
+                {
+                    'genes':
+                    [rand.randint(0, 1) for i in range(self.length)],
+                    'eval': 0.,
+                    'x': 0.,
+                    'y': 0.,
+                    'prob': 0.,
+                    'fitness': 0.
+                } for x in range(init_pop)]
+
         self.children = []
 
-        for ind in pop:
-            decode(ind)
+        for ind in self.population:
+            self.decode(ind)
 
-        self.eval_pop(self.population)
+        self.population = self.eval_pop(self.population)
 
+        print("******** INITIAL POPULATION ********")
+        for ind in self.population:
+            print(ind)
+            # print(str(ind['x']) + " " + str(ind['eval']) + "\n")
 
-   
     def selection(self):
-
-        """ 
-        TODO: seleccion por ruleta
-        """
-
         total_fitness = 0
         total_prob = 0
+
         for ind in self.population:
+            # print(ind['eval'])
             total_fitness += ind['eval']
 
-        for  ind in self.population:
-            prob_ind = total_prob + (ind['eval'] / total_fitness)
+        # print("\nTotal fitness: ", total_fitness)
+
+        for ind in self.population:
+            prob_ind = ((ind['eval'] / total_fitness))
             ind['prob'] = prob_ind
             total_prob += prob_ind
         
+        # print("\n******** Probability Count ********")
+        # for ind in self.population:
+        #     print(ind)
+
         self.taken = []
 
-        while len(self.taken) < self.pop_size:
-            r = rand.rand()
+        while len(self.taken) < len(self.population):
+            r = rand.random()
             for ind in self.population:
-                if r <= ind['prob']:
-                    taken.append(ind)
+                if r >= ind['prob']:
+                    self.taken.append(ind)
                     break
-            
         
-        # print(self.taken)
-                
+        # print("\nTAKEN: \n")
+        # for ind in self.taken:
+        #     print(ind)
+
+
     def crossover(self):
-        for i in range(len(self.population)):
-            first = {
-                'genes': [],
-                'eval': 0.,
-                'x': 0.,
-                'y': 0.,
-                'prob': 0.,
-                'fitness': 0.
-            }
-            second = {
-                'genes': [],
-                'eval': 0.,
-                'x': 0.,
-                'y': 0.,
-                'prob': 0.,
-                'fitness': 0.
-            }
+        for ind in self.population:
 
-            cross_point = rand.randrange(len(self.population[i]['genes']))
+            # print("current: ", ind)
+            partner = 0 # partner to be paired with
+            if self.opc == 1:
+                first = {
+                    'genes': [],
+                    'eval': 0.,
+                    'x': [],
+                    'prob': 0.,
+                    'fitness': 0.
+                }
+                second = {
+                    'genes': [],
+                    'eval': 0.,
+                    'x': [],
+                    'prob': 0.,
+                    'fitness': 0.
+                }
+            else:
+                first = {
+                    'genes': [],
+                    'eval': 0.,
+                    'x': 0.,
+                    'y': 0.,
+                    'prob': 0.,
+                    'fitness': 0.
+                }
+                second = {
+                    'genes': [],
+                    'eval': 0.,
+                    'x': 0.,
+                    'y': 0.,
+                    'prob': 0.,
+                    'fitness': 0.
+                }
 
-            for j in range(cross_point):
-                first['genes'].append(self.population[i]['genes'][j])
-                second['genes'].append(self.population[self.taken[i]]['genes'][j])
-            for j in range(cross_point, len(self.population[i]['genes'])):
-                first['genes'].append(self.population[self.taken[i]]['genes'][j])
-                second['genes'].append(self.population[i]['genes'][j])
+            cross_point = rand.randrange(len(ind['genes']))
 
-            self.children.append(first)
-            self.second.append(first)
+            # print("\n crosspoint: ", cross_point)
 
-            # if self.opc == 1:
-            #     first = self.rastrigin(first)
-            #     second = self.rastrigin(second)
-            # elif self.opc == 2:
-            #     first = self.himmelblau(first)
-            #     second = self.himmelblau(second)
-            # elif self.opc == 3:
-            #     first = self.eggholder(first)
-            #     second = self.eggholder(second)
+            first['genes'] += (ind['genes'][0:cross_point])
+            first['genes'] += (self.taken[partner]['genes'][cross_point:])
 
-            # if first['eval'] < self.females[i]['eval']:
-            #     self.females[i] = first
+            second['genes'] += (self.taken[partner]['genes'][0:cross_point])
+            second['genes'] += (ind['genes'][cross_point:])
             
-            # if second['eval'] < self.males[self.taken[i]]['eval']:
-            #     self.males[self.taken[i]] = second
-        
+            if len(self.children) < self.max_pop_size:
+                self.children.append(first)
+            if len(self.children) < self.max_pop_size:
+                self.children.append(second)
+
+            partner += 1
 
     def mutation(self):
         rate = 1 / self.length
-        for i in range(len(self.children)):
-            rand_gene = rand.randrange(len(self.children[i]['genes']))
-            
-            r = rand.rand()
+        for child in self.children:
+            rand_gene = rand.randrange(self.length)
+
+            r = rand.random()
 
             if r <= rate:
-                self.children[i]['genes'][rand_gene] = 0 if self.children[i]['genes'][rand_gene] = 1 else  self.children[p]['genes'][rand_gene] = 1
+                if child['genes'][rand_gene] == 1:
+                    child['genes'][rand_gene] = 0 
+                else:
+                    child['genes'][rand_gene] = 1
 
-            for ind in self.children:
-                decode(ind)
+        for ind in self.children:
+            self.decode(ind)
 
-            self.eval_pop(self.children)
-
-            
+        self.eval_pop(self.children)
 
     def eval_pop(self, population):
         for i in range(len(population)):
             if self.opc == 1:
-                population[i] = self.rastrigin(self.population[i])
+                population[i] = self.rastrigin(population[i])
             elif self.opc == 2:
-                population[i] = self.himmelblau(self.population[i])
+                population[i] = self.himmelblau(population[i])
             elif self.opc == 3:
-                population[i] = self.eggholder(self.population[i])
-
+                population[i] = self.eggholder(population[i])
+        
+        return population
 
     def rastrigin(self, individual):
         s = 0
-        factor = 10 * len(individual['genes'])
-        for i in individual['genes']:
-            s += i ** 2 - 10 * math.cos(2 * math.pi * i)
+        factor = 10 * self.dim
+        for x in individual['x']:
+            s += x ** 2 - 10 * math.cos(2 * math.pi * x)
+
         individual['eval'] = factor + s
 
-        self.count += 1
+        self.count += 1 # update call counter
+
+        if self.count == 20000 or self.count == 20000 or self.count == 20000:
+            print("\nThe population: ")
+            for ind in self.population:
+                print(ind)
 
         return individual
-    
+
     def himmelblau(self, individual):
-        individual['eval'] = (individual.x ** 2 + individual.y - 11) ** 2 + (individual.x + individual.y ** 2 - 7) ** 2
+        individual['eval'] = (individual['x'] ** 2 + individual['y'] -
+                              11) ** 2 + (individual['x'] + individual['y'] ** 2 - 7) ** 2
+        
+        self.count += 1 # update call counter
+
 
         return individual
-    
+
     def eggholder(self, individual):
 
-        individual['eval'] = (individual.y + 47) * math.sin(math.sqrt(abs((x / 2) + (individual.y + 47)))) - individual.x * math.sin(math.sqrt(abs(x - (y - 47))))
+        individual['eval'] = (individual['y'] + 47) * math.sin(math.sqrt(abs((individual['x'] / 2) + (
+            individual['y'] + 47)))) - individual['x'] * math.sin(math.sqrt(abs(individual['x'] - (individual['y'] + 47))))
+        
+        self.count += 1 # update call counter
+
 
         return individual
 
-    # def encode(self, number):
-    #     genes = []
-    #     if self.opc == 1:
-    #        for i in range(self.length):
-    #            genes[i]
-    #     elif self.opc == 2:
-    #         self.min = -5.0000
-    #         self.max = 5.0000
-    #     elif self.opc == 3:
-    #         self.min = -512.0000
-    #         self.max = 512.0000
-       
-    
     def decode(self, individual):
         s1 = ""
         s2 = ""
         if self.opc == 1:
-            for gene in genes:
-                s1 += str(gene)
-            x = self.min + 0.0001 * int(s1, 2)
-            individual['x'] = x
+            genes = individual['genes']
+            #print(genes)
+            chunks = [genes[x:x+int(self.length / self.dim)] for x in range(0, len(genes), int(self.length / self.dim))]
+
+            # print(len(chunks))
+            for chunk in chunks:
+                s1 = ""
+                for i in range(len(chunk)):
+                    s1 += str(chunk[i])
+                x = self.min + 0.01 * int(s1, 2)
+                individual['x'].append(x)
         else:
-            for i in range(len(genes) / 2):
-                s1 += str(genes[i])
-            for i in range((len(genes) / 2), len(genes)):
-                s2 += str(genes[i])
-            x = self.min + 0.0001 * int(s1, 2)
-            y = self.min + 0.0001 * int(s2, 2)
+            for i in range(int(len(individual['genes']) / 2)):
+                s1 += str(individual['genes'][i])
+            for i in range(int(len(individual['genes']) / 2), len(individual['genes'])):
+                s2 += str(individual['genes'][i])
+            x = self.min + 0.01 * int(s1, 2)
+            y = self.min + 0.01 * int(s2, 2)
             individual['x'] = x
             individual['y'] = y
-        
+
         return individual
 
 
-
-        
 def main():
 
-    d = Daga(550, 500000, 0.005, 1)
-
+    d = BaseGA(500, 3, 200000, 1000, 0.05, 3)
+    g = 0
     while(d.count <= d.max_cycles):
         d.selection()
         d.crossover()
         d.mutation()
-    print(d.population)
+        d.population = []
+        d.population = d.children
+        d.children = []
+        g += 1
+
+    print('**** Population after generation %d *****' % (g))
+    for ind in d.population:
+        print(ind)
+        # print(str(ind['x']) + " " + str(ind['eval']) + "\n")
+
+
 
 if __name__ == "__main__":
     main()
-
-
