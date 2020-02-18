@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 Base Binary Genetic Algorithm
 
@@ -10,6 +12,8 @@ Optional elitism
 
 import random as rand
 import math
+# import matplotlib.pyplot as plt
+import csv
 
 
 class BaseGA:
@@ -74,6 +78,15 @@ class BaseGA:
 
         self.population = self.eval_pop(self.population)
 
+        aux = self.population.copy()
+
+        def getF(elem):
+            return elem['fitness']
+        
+        aux.sort(key=getF, reverse=True)
+
+        self.best.append(aux[0])
+
         print("******** INITIAL POPULATION ********")
         for ind in self.population:
             # print(ind)
@@ -88,13 +101,10 @@ class BaseGA:
         # total_prob = 0
 
         # for ind in self.population:
-        #     # print(ind['eval'])
         #     total_fitness += ind['fitness']
 
         # rel = [ind['fitness']/total_fitness for ind in self.population]
         # probs = [sum(rel[:i+1]) for i in range(len(rel))]
-
-        
 
         # while len(self.selected) < len(self.population):
         #     r = rand.random()
@@ -104,15 +114,40 @@ class BaseGA:
         #             break
 
         ########### Tournament selection
-        for i in range(len(self.population)):
-            r = rand.randrange(0, len(self.population))
-            if self.population[i]['fitness'] >= self.population[r]['fitness']:
-                self.selected.append(self.population[i])
-            else:
-                self.selected.append(self.population[r])
-      
+        # for i in range(len(self.population)):
+        #     r = rand.randrange(0, len(self.population))
+        #     if self.population[i]['fitness'] >= self.population[r]['fitness']:
+        #         self.selected.append(self.population[i])
+        #     else:
+        #         self.selected.append(self.population[r])
 
-       
+        ########## Stochastic Universal Sampling
+        total_fitness = 0
+
+        for ind in self.population:
+            total_fitness += ind['fitness']
+
+        n = 10 # individuals to keep
+        p = self.length - n # distance
+        start = rand.randrange(0, p)
+        pointers = [start + i * p for i in range(n)]
+        c = [sum(self.population[:i+1]['fitness']) for i in range(len(rel))]
+        
+        self.selected = rws(self.population, pointers)
+        
+        def rws(population, points):
+            keep = []
+            for p in points:
+                i = 0
+                while c[i] < p:
+                    i += 1
+                keep.append(population[i])
+            return keep
+            
+
+
+
+        # Vasconcelos method
 
     def crossover(self):
         for (i, ind) in enumerate(self.selected):
@@ -171,9 +206,6 @@ class BaseGA:
             if len(self.children) < self.pop_size:
                 self.children.append(second)
 
-      
-
-        
     def mutation(self):
         rate = 0.1 / self.length
         for child in self.children:
@@ -191,6 +223,26 @@ class BaseGA:
             self.decode(ind)
 
         self.eval_pop(self.children)
+
+
+        def getF(elem):
+            return elem['fitness']
+
+        # elitism
+        aux1 = self.population.copy()
+        aux1.sort(key=getF, reverse=True)
+
+        elite = aux1[:9]
+
+
+        aux = self.children.copy()
+        aux.sort(key=getF, reverse=True)
+        elite_c = aux[:90]
+
+        new_pop = elite + elite_c
+        self.population = new_pop.copy()
+
+        self.best.append(aux[0])
 
     def eval_pop(self, population):
         for i in range(len(population)):
@@ -214,11 +266,6 @@ class BaseGA:
         individual['fitness'] = 1 / (individual['eval'] + 0.00001) 
 
         self.count += 1 # update call counter
-
-        # if self.count == 20000 or self.count == 100000 or self.count == 200000:
-        #     print("\nThe population: ")
-        #     for ind in self.population:
-        #         print(ind)
 
         return individual
 
@@ -281,15 +328,22 @@ def main():
         d.selection()
         d.crossover()
         d.mutation()
-        d.population = []
-        d.population = d.children
+        # d.population = []
+        # d.population = d.children
         d.children = []
         g += 1
 
-    print('**** Population after generation %d *****' % (g))
-    for ind in d.population:
-        print(ind)
-        # print(str(ind['x']) + " " + str(ind['eval']) + "\n")
+    print('***** Best solutions after %d *****' % (g))
+    for ind in d.best:
+        print(str(ind['eval']) + " " + str(ind['fitness']) + "\n")
+    
+    # with open('results_elite_sus_'+str(d.opc)+'.csv', mode='w') as res_file:
+    #     res_writer = csv.writer(res_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+    #     res_writer.writerow(['eval', 'fitness'])
+    #     for ind in d.best:
+    #         res_writer.writerow([ind['eval'], ind['fitness']])
+
 
 
 
