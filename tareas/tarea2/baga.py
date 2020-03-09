@@ -9,7 +9,7 @@ Random mutation
 Optional elitism
 """
 #import matplotlib.pyplot as plt
-
+import test_functions as bench
 import random as rand
 import math
 # import matplotlib.pyplot as plt
@@ -32,46 +32,50 @@ class BaseGA:
         if self.opc == 1:
             self.min = -5.12
             self.max = 5.12
-            r = (self.max * 2) * 10000
+            r = (self.max * 2) * 100
             self.length = math.floor(math.log2(r)) * self.dim
         elif self.opc == 2:
             self.min = -5.00
             self.max = 5.00
-            r = (self.max * 2) * 10000
+            r = (self.max * 2) * 100
             self.length = math.floor(math.log2(r)) * 2
         elif self.opc == 3:
             self.min = -512.00
             self.max = 512.00
-            r = (self.max * 2) * 10000
+            r = (self.max * 2) * 100
             self.length = math.floor(math.log2(r)) * 2
+        elif self.opc == 4:
+            self.min = 0
+            self.max = self.dim
+            f = math.factorial(self.max )
+            self.length = math.ceil(math.log2(f))
+        elif self.opc == 5:
+            self.min = 0
+            self.max = self.dim
+            f = math.factorial(self.max)
+            self.length = math.ceil(math.log2(f))
+        
+        print(self.length)
 
         self.max_cycles = max_cycles
 
         self.count = 0  # benchmark function calls
 
-        if opc == 1:
-            self.population = [
-                {
-                    'genes':
-                    [rand.randint(0, 1) for i in range(self.length)],
-                    'eval': 0.,
-                    'x': [],
-                    'prob': 0.,
-                    'fitness': 0.
-                } for x in range(init_pop)]
-        else:
-            self.population = [
-                {
-                    'genes':
-                    [rand.randint(0, 1) for i in range(self.length)],
-                    'eval': 0.,
-                    'x': 0.,
-                    'y': 0.,
-                    'prob': 0.,
-                    'fitness': 0.
-                } for x in range(init_pop)]
+
+        self.population = [
+            {
+                'genes':[rand.randint(0, 1) for i in range(self.length)],
+                'eval': 0.,
+                'x': [],
+                'prob': 0.,
+                'fitness': 0.
+            } for x in range(init_pop)]
+       
 
         self.children = []
+
+        # for ind in self.population:
+        #     print(ind['genes'])
 
         for ind in self.population:
             self.decode(ind)
@@ -79,17 +83,13 @@ class BaseGA:
         self.population = self.eval_pop(self.population)
 
         aux = self.population.copy()
-
-        def getF(elem):
-            return elem['fitness']
         
-        aux.sort(key=getF, reverse=True)
+        aux.sort(key=self.getFitness)
 
         self.best.append(aux[0])
 
         print("******** INITIAL POPULATION ********")
         for ind in self.population:
-            # print(ind)
             print(str(ind['x']) + " " + str(ind['eval']) + " " + str(ind['fitness']) + "\n")
 
     def selection(self):
@@ -113,53 +113,59 @@ class BaseGA:
         #             break
 
         ########### Tournament selection
-        # for i in range(len(self.population)):
-        #     r = rand.randrange(0, len(self.population))
-        #     if self.population[i]['fitness'] >= self.population[r]['fitness']:
-        #         self.selected.append(self.population[i])
-        #     else:
-        #         self.selected.append(self.population[r])
+        for i in range(len(self.population)):
+            r = rand.randrange(0, len(self.population))
+            # if self.population[i]['fitness'] >= self.population[r]['fitness']:
+            #     self.selected.append(self.population[i])
+            # else:
+            #     self.selected.append(self.population[r])
+
+            if self.population[i]['eval'] <= self.population[r]['eval']:
+                self.selected.append(self.population[i])
+            else:
+                self.selected.append(self.population[r])
 
         ########## Stochastic Universal Sampling
-        total_fitness = 0
+        # total_fitness = 0
       
-        sums = []
-        s = 0
-        for ind in self.population:
-            total_fitness += ind['fitness']
-            if len(sums) > 1:
-                s = sums[len(sums) - 1] + ind['fitness']
-                sums.append(s)
-            else:
-                sums.append(ind['fitness'])
+        # sums = []
+        # s = 0
+        # for ind in self.population:
+        #     total_fitness += ind['fitness']
+        #     if len(sums) > 1:
+        #         s = sums[len(sums) - 1] + ind['fitness']
+        #         sums.append(s)
+        #     else:
+        #         sums.append(ind['fitness'])
 
-        point_distance = int(total_fitness / self.length)
-        start_point = int(rand.uniform(0, point_distance))
-        points = [start_point + i * point_distance for i in range(self.length)]
-        while len(self.selected) < self.length:
-            # rand.shuffle(self.population)
-            i = 0
-            while i < len(points) and len(self.selected) < self.length:
-                j = 0
-                while j < len(self.population):
-                    if sums[j] > points[i]:
-                        self.selected.append(self.population[j])
-                        break
-                    j += 1
-                i += 1
+        # point_distance = int(total_fitness / self.length)
+        # start_point = int(rand.uniform(0, point_distance))
+        # points = [start_point + i * point_distance for i in range(self.length)]
+        # while len(self.selected) < self.length:
+        #     # rand.shuffle(self.population)
+        #     i = 0
+        #     while i < len(points) and len(self.selected) < self.length:
+        #         j = 0
+        #         while j < len(self.population):
+        #             if sums[j] > points[i]:
+        #                 self.selected.append(self.population[j])
+        #                 break
+        #             j += 1
+        #         i += 1
         
         # Vasconcelos method
-        # def getF(elem):
+        # def getFitness(elem):
         #     return elem['fitness']
 
         # aux1 = self.population.copy()
-        # aux1.sort(key=getF, reverse=True)
+        # aux1.sort(key=getFitness, reverse=True)
 
         # self.selected = aux1.copy()
 
     def crossover(self):
+
         for (i, ind) in enumerate(self.selected):
-            if self.opc == 1:
+            if self.opc >= 4:
                 first = {
                     'genes': [],
                     'eval': 0.,
@@ -178,22 +184,20 @@ class BaseGA:
                 first = {
                     'genes': [],
                     'eval': 0.,
-                    'x': 0.,
-                    'y': 0.,
+                    'x': [0,0],
                     'prob': 0.,
                     'fitness': 0.
                 }
                 second = {
                     'genes': [],
                     'eval': 0.,
-                    'x': 0.,
-                    'y': 0.,
+                    'x': [0,0],
                     'prob': 0.,
                     'fitness': 0.
                 }
 
             cross_point = rand.randrange(len(ind['genes']))
-
+         
             # fol all methods except Vasconcelos
             if i % 2 == 0:
                 partner = i + 1
@@ -216,9 +220,7 @@ class BaseGA:
                 self.children.append(first)
             if len(self.children) < self.pop_size:
                 self.children.append(second)
-
-            # print("children: ", self.children)
-
+                
     def mutation(self):
         rate = 0.1 / self.length
         for child in self.children:
@@ -234,77 +236,47 @@ class BaseGA:
 
         for ind in self.children:
             self.decode(ind)
-
+               
         self.eval_pop(self.children)
 
-
-        def getF(elem):
-            return elem['fitness']
-
-        # elitism
+    def elitism(self):
+         # elitism
         aux1 = self.population.copy()
-        aux1.sort(key=getF, reverse=True)
+        aux1.sort(key=self.getFitness)
 
         elite = aux1[:9]
 
-
         aux = self.children.copy()
-        aux.sort(key=getF, reverse=True)
+        aux.sort(key=self.getFitness)
         elite_c = aux[:90]
 
         new_pop = elite + elite_c
         self.population = new_pop.copy()
-        self.best.append(aux[0])
+        new_pop.sort(key=self.getFitness)
+        self.best.append(new_pop[0])
+    
+    def getFitness(self, elem):
+        #return elem['fitness']
+        return elem['eval']
 
     def eval_pop(self, population):
         for i in range(len(population)):
             if self.opc == 1:
-                population[i] = self.rastrigin(population[i])
+                population[i] = bench.rastrigin(population[i])
             elif self.opc == 2:
-                population[i] = self.himmelblau(population[i])
+                population[i] = bench.himmelblau(population[i])
             elif self.opc == 3:
-                population[i] = self.eggholder(population[i])
+                population[i] = bench.eggholder(population[i])
+            elif self.opc == 4:
+                population[i] = bench.nqueens(population[i])
+            elif self.opc == 5:
+                population[i] = bench.tsp(population[i])
+        
+        self.count += 1
         
         return population
 
-    def rastrigin(self, individual):
-        s = 0
-        factor = 10 * self.dim
-        for x in individual['x']:
-            s += x ** 2 - 10 * math.cos(2 * math.pi * x)
-
-        individual['eval'] = factor + s
-
-        individual['fitness'] = 1 / (individual['eval'] + 0.00001) 
-
-        self.count += 1 # update call counter
-
-        return individual
-
-    def himmelblau(self, individual):
-        individual['eval'] = (individual['x'] ** 2 + individual['y'] -
-                              11) ** 2 + (individual['x'] + individual['y'] ** 2 - 7) ** 2
-
-        individual['fitness'] = 1 / individual['eval']
-        
-        self.count += 1 # update call counter
-
-
-        return individual
-
-    def eggholder(self, individual):
-
-        individual['eval'] = (individual['y'] + 47) * math.sin(math.sqrt(abs((individual['x'] / 2) + (
-            individual['y'] + 47)))) - individual['x'] * math.sin(math.sqrt(abs(individual['x'] - (individual['y'] + 47))))
-
-         
-        #individual['fitness'] = -individual['eval']
-        individual['fitness'] = -1 / individual['eval']
-        self.count += 1 # update call counter
-
-
-        return individual
-
+    
     def decode(self, individual):
         s1 = ""
         s2 = ""
@@ -313,49 +285,91 @@ class BaseGA:
             #print(genes)
             chunks = [genes[x:x+int(self.length / self.dim)] for x in range(0, len(genes), int(self.length / self.dim))]
 
-            # print(len(chunks))
             for chunk in chunks:
                 s1 = ""
                 for i in range(len(chunk)):
                     s1 += str(chunk[i])
-                x = self.min + 0.0001 * int(s1, 2)
+                x = self.min + 0.01 * int(s1, 2)
                 individual['x'].append(x)
-        else:
+        elif self.opc > 1 and self.opc < 4:
             for i in range(int(len(individual['genes']) / 2)):
                 s1 += str(individual['genes'][i])
             for i in range(int(len(individual['genes']) / 2), len(individual['genes'])):
                 s2 += str(individual['genes'][i])
-            x = self.min + 0.0001 * int(s1, 2)
-            y = self.min + 0.0001 * int(s2, 2)
-            individual['x'] = x
-            individual['y'] = y
+
+            x = self.min + 0.01 * int(s1, 2)
+            y = self.min + 0.01 * int(s2, 2)
+            individual['x'][0] = x
+            individual['x'][1] = y
+        
+        else:
+            l = [i for i in range(self.max)]
+            #print(l)
+            f = math.factorial(self.max - 1)
+            genes = individual['genes']
+            strings = [str(x) for x in genes]
+            a_string = "".join(strings)
+            n = int(a_string, 2)
+            individual['x'] = []
+             
+
+            # repairing
+            if n >= f:
+                for i in range(self.length):
+                    if individual['genes'][i] == 0:
+                        individual['genes'][i] = 1
+                    else:
+                        individual['genes'][i] = 0
+                #individual['genes'][0] = 0
+                genes = individual['genes']
+                strings = [str(x) for x in genes]
+                a_string = "".join(strings)
+                n = int(a_string, 2)
+            
+            #print(a_string + " " + str(n))
+            m = self.max - 1
+            for i in range(m):
+                if (len(l) > 1):
+                    q = int(n / math.factorial(m - i)) 
+                    if q >= len(l):
+                        q = len(l) - q
+                    #print(str(n) + " " + str(q) + " " + str(len(l)))
+                    r = n % math.factorial(m - i)
+                    x = l[q]
+                    l.remove(x)
+                    individual['x'].append(x)
+                    n = r
+                else:
+                    individual['x'].append(l[0])
+                
+
+
 
         return individual
 
 
 def main():
 
-    d = BaseGA(100, 2, 500, 3)
+    d = BaseGA(100, 8, 500, 4)
     g = 0
     while(g < d.max_cycles):
         d.selection()
         d.crossover()
         d.mutation()
-        # d.population = []
-        # d.population = d.children
+        d.elitism()
         d.children = []
         g += 1
 
     print('***** Best solutions after %d *****' % (g))
     for ind in d.best:
-        print(str(ind['eval']) + " " + str(ind['fitness']) + "\n")
+        print(str(ind['x']) + " " + str(ind['eval']) + " " + str(ind['fitness']) + "\n")
     
-    with open('results_elite_sus_'+str(d.opc)+'_new_n.csv', mode='w') as res_file:
+    with open('res_bin_'+str(d.opc)+'_10.csv', mode='w') as res_file:
         res_writer = csv.writer(res_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
-        res_writer.writerow(['eval', 'fitness'])
+        res_writer.writerow(['x','eval', 'fitness'])
         for ind in d.best:
-            res_writer.writerow([ind['eval'], ind['fitness']])
+            res_writer.writerow([ind['x'], ind['eval'], ind['fitness']])
 
 
 
