@@ -1,0 +1,354 @@
+\documentclass[letterpaper,12pt]{article}
+\usepackage{bookmark}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{mathptmx}
+\usepackage{float}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1.3in]{geometry}
+\usepackage{amsthm}
+\usepackage{marvosym}
+\usepackage{bm}
+
+
+
+\renewcommand\qedsymbol{\Squarepipe}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definición}[section]
+\newtheorem*{thm}{Teorema}
+
+
+\setlength\parindent{0pt}
+
+\newcounter{paragraphnumber}
+\newcommand{\para}{%
+  \vspace{10pt}\noindent{\bfseries\refstepcounter{paragraphnumber}\theparagraphnumber.\quad}%
+}
+
+%\setsecheadstyle{\large\bfseries}
+%\setsubsecheadstyle{\bfseries}
+
+\setlength\parindent{0pt}
+
+\pagenumbering{gobble}
+
+%\usepackage[margin=1in]{geometry}
+
+\usepackage{enumitem}
+\setlist{nosep}
+
+\usepackage{xcolor}
+\usepackage{booktabs} 
+\usepackage{colortbl} 
+\usepackage{xfrac}
+
+%\newcommand{ra}[1]{renewcommand{arraystretch}{#1}}
+
+
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks,
+  linkcolor={red!50!black},
+  citecolor={blue!50!black},
+  urlcolor={green!50!black}
+}
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+
+\begin{document}
+
+\begin{center}
+  {\large Cómputo Evolutivo}\\
+  \vspace{0.2cm}
+  {\large\bfseries Tarea 3}\\
+  \vspace{0.2cm}
+  {\large PCIC - UNAM}\\
+  \vspace{0.5cm}
+  {\itshape 19 de marzo de 2020}\\
+  \vspace{0.5cm}
+  Diego de Jesús Isla López\\
+  (\href{mailto:dislalopez@gmail.com}{\itshape dislalopez@gmail.com})\\
+  (\href{mailto:diego.isla@comunidad.unam.mx}{\itshape diego.isla@comunidad.unam.mx})\\
+\end{center}
+
+
+
+\section{Definición del problema}
+
+Comparar el desempeño de los algoritmos Optimización por Cúmulo de Partículas(PSO), Evolución Diferencial (DE) y algoritmo genético (GA) con las funcines Rastrigin, Himmelblau y Eggholder.\\
+
+\begin{itemize}
+  \item Selección: Torneo binario
+  \item Cruza: aleatoria en un punto con tasa de \(0.9\)
+  \item Mutación: aleatoria con tasa de \(\frac{0.1}{L}\) donde \(L\) es la longitud del individuo
+  \item Elitismo
+  \item Población: \(1000\) individuos
+  \item Número de generaciones: \(300\)
+\end{itemize}
+
+\medskip
+Para PSO a su vez se configura el valor de inercia en 0.3, el factor cognitivo en 0.4 y el factor social en 0.7. Para DE se utiliza un factor de escalamiento \(F\) de 0.2. La variante usada de DE es DE/best/2/bin, la cual indica que se utiliza la mejor solución global como base para generar nuevos individuos.\\
+
+Para todos las pruebas se hicieron 10 ejecuciones de cada algoritmo para cada problema. Se muestran las gráficas y tablas correspondientes.
+
+\section{Resultados para Rastrigin}
+
+En el caso de GA en ambas codificaciones vemos un comportamiento estable y muy similar con tendencia a converger en la solución óptima del problema (figuras \ref{fig:ga-rast1} y \ref{fig:ga-rast2}). En la codificación real vemos un poco más de ruido antes de converger en dicha solución.
+
+\medskip
+\begin{figure}[h!]
+  \minipage{0.50\textwidth}
+    \includegraphics[width=\linewidth]{bin_rast}
+    \caption{GA binario}
+    \label{fig:ga-rast1} 
+  \endminipage\hfill
+  \minipage{0.50\textwidth}
+    \includegraphics[width=\linewidth]{real_rast}
+    \caption{GA Real}
+    \label{fig:ga-rast2} 
+  \endminipage\hfill
+\end{figure}
+
+En las figuras \ref{fig:rast-de} y \ref{fig:rast-pso} se observan las gráficas de desempeño para PSO y DE, respectivamente. En el caso de DE, observamos un desempeño similar al de GA-binario, obteniendo soluciones vecinas a la solución óptima. En el caso de PSO, se observa un comporamiento más habitual y que converge a la solución óptima. Comparando el desempeño de DE con PSO, es posible observar que ambos son muy similares, aunque en general PSO encuentra mejores soluciones (tablas \ref{tab:derast} y \ref{tab:psorast}).
+
+\begin{figure}[!h]
+    \minipage{0.50\textwidth}
+      \includegraphics[width=\linewidth]{de_rast}
+      \caption{DE}
+      \label{fig:rast-de}
+    \endminipage\hfill
+      \minipage{0.50\textwidth}
+      \includegraphics[width=\linewidth]{pso_rast}
+      \caption{PSO}
+      \label{fig:rast-pso}
+    \endminipage\hfill
+    
+ \end{figure}
+
+
+  \begin{table}[!h]
+    \begin{center}
+      \begin{tabular}{cccc}
+        \toprule 
+          Muestra & \(\Sigma f(x)\) & \(\sigma\)  & \(\sigma^2\)  \\
+          \midrule
+          \rowcolor{black!20} E1 & 64.49 & 0.04695235 & 0.002204523 \\
+          E2 & 650.16 & 0 & 0 \\
+          \rowcolor{black!20} E3 & 1216.04 & 0 & 0\\
+          E4 & 139.84 & 0.05615078 & 0.00315291\\
+          \rowcolor{black!20} E5 & 324.62 & 0.08357625 & 0.00698499 \\
+          E6 & 538.79 & 0 & 0 \\
+          \rowcolor{black!20} E7 & 446.18 & 0.04034733 & 0.001627907 \\
+          E8 & 761.53 & 0 & 0\\
+          \rowcolor{black!20} E9 & 343.14 & 0 & 0. \\
+          E10 & 319.09 & 0.0009950041 & 9.900332e-07 \\
+          \rowcolor{black!20} \(\mu\) & 1.59 & 0.03737823 & 0.001397132 \\ 
+          \bottomrule
+        \end{tabular}
+    \end{center}
+    \caption{Comportamiendo de DE para Rastrigin} 
+\label{tab:derast}
+\end{table}
+
+\begin{table}[!h]
+  \begin{center}
+    \begin{tabular}{cccc}
+      \toprule 
+        Muestra & \(\Sigma f(x)\) & \(\sigma\)  & \(\sigma^2\)  \\
+        \midrule
+        \rowcolor{black!20} E1 & 1.04 & 0.04259916 & 0.001814689 \\
+        E2 & 1.18 & 0.06060182 & 0.00367258 \\
+        \rowcolor{black!20} E3 & 1.68 & 0.07243441 & 0.005246744\\
+        E4 & 0.51 & 0.0217129 & 0.0004714529\\
+        \rowcolor{black!20} E5 & 1.77 & 0.09188202& 0.008442306 \\
+        E6 & 1.04 & 0.04426461 & 0.001959355 \\
+        \rowcolor{black!20} E7 & 2.92 & 0.1084016 & 0.01175091 \\
+        E8 & 1.21 & 0.05872637 & 0.003448786\\
+        \rowcolor{black!20} E9 & 1.41 & 0.06650551 & 0.004422983 \\
+        E10 & 1.78 & 0.08583849 & 0.007368246 \\
+        \rowcolor{black!20} \(\mu\) & 0.0048 & 0.0697123 & 0.004859805 \\ 
+        \bottomrule
+      \end{tabular}
+  \end{center}
+  \caption{Comportamiendo de PSO para Rastrigin} 
+\label{tab:psorast}
+\end{table}
+
+\section{Resultados para Himmelblau}
+
+En el caso de GA con codificación real vemos un comportamiento prácticamente estático cercano en la región de la solución óptima (figura \ref{fig:ga-himm2}). Veremos esto para diferentes instancias debido al tamaño de población elegido (1000 individuos). 
+
+\begin{figure}[!h]
+    \minipage{0.50\textwidth}
+      \includegraphics[width=\linewidth]{bin_himm}
+      \caption{GA binario}
+      \label{fig:ga-himm1}
+    \endminipage\hfill
+    \minipage{0.50\textwidth}
+      \includegraphics[width=\linewidth]{real_himm}
+      \caption{GA Real}
+      \label{fig:ga-himm2}
+    \endminipage\hfill
+ \end{figure}
+
+
+
+En las figuras \ref{fig:himm-de} y \ref{fig:himm-pso} se muestran las gráficas de desempeño para DE y PSO, respectivamente. Como se mencionó anteriormente, podemos observar de nuevo un comportamiento casi estático en DE, a causa del tamaño de la población. Todas las soluciones están en la vecindad del óptimo. En el caso de PSO vemos un comportamiento similar al anterior, donde encuentra alguna de las soluciones óptimas en las primeras generaciones. En las tablas \ref{tab:de-himm} y \ref{tab:pso-himm} podemos apreciar que de nueva cuenta PSO encuentra mejores soluciones en general, y se puede corroborar la poca variación que tienen las soluciones encontradas por DE.
+
+\begin{figure}[!htb]
+    \minipage{0.50\textwidth}
+      \includegraphics[width=\linewidth]{de_himm}
+      \caption{DE}
+      \label{fig:himm-de}
+    \endminipage\hfill
+      \minipage{0.50\textwidth}
+      \includegraphics[width=\linewidth]{pso_himm}
+      \caption{PSO}
+      \label{fig:himm-pso}
+    \endminipage\hfill
+    
+ \end{figure}
+
+ \begin{table}
+  \begin{center}
+    \begin{tabular}{cccc}
+      \toprule 
+        Muestra & \(\Sigma f(x)\) & \(\sigma\)  & \(\sigma^2\)  \\
+        \midrule
+        \rowcolor{black!20} E1 & 15.05 & 0 & 0 \\
+        E2 & 156.52 & 0 & 0 \\
+        \rowcolor{black!20} E3 & 0.15 & 0.00517212 & 2.675083e-05\\
+        E4 & 18.12 & 0.002441338 & 5.960133e-06\\
+        \rowcolor{black!20} E5 & 132.44 & 0 & 0 \\
+        E6 & 0.92 & 0.03743385 & 0.001401293 \\
+        \rowcolor{black!20} E7 & 6.14 & 0.003441007 & 1.184053e-05 \\
+        E8 & 0.04 & 0.001147002 & 1.315615e-06\\
+        \rowcolor{black!20} E9 & 66.224 & 0 & 0 \\
+        E10 & 10.42 & 0.05458574 & 0.002979604 \\
+        \rowcolor{black!20} \(\mu\) & 0.1344 & 0.0210398 & 0.0004426764 \\ 
+        \bottomrule
+      \end{tabular}
+  \end{center}
+  \caption{Comportamiento de DE para Himmelblau}
+  \label{tab:de-himm}
+\end{table}
+
+
+\begin{table}
+  \begin{center}
+    \begin{tabular}{cccc}
+      \toprule 
+        Muestra & \(\Sigma f(x)\) & \(\sigma\)  & \(\sigma^2\)  \\
+        \midrule
+        \rowcolor{black!20} E1 & 0.55 & 0.02507954 & 0.0006289834 \\
+        E2 & 0.17 & 0.005100322 & 2.601329e-05\\
+        \rowcolor{black!20} E3 & 3.15 & 0.1696637 & 0.02878578\\
+        E4 & 0.28 & 0.0113048 & 0.0001277984\\
+        \rowcolor{black!20} E5 & 10.91 & 0.611737 & 0.3742222 \\
+        E6 & 0.17 & 0.005034543 & 2.534662e-05 \\
+        \rowcolor{black!20} E7 & 0.54 & 0.01980162 & 0.0003921041 \\
+        E8 & 0.81 & 0.04109016 & 0.001688401\\
+        \rowcolor{black!20} E9 & 3.38 & 0.19482 & 0.03795482 \\
+        E10 & 0.42 & 0.02084978 & 0.0004347132 \\
+        \rowcolor{black!20} \(\mu\) & 0.0067 & 0.210781 & 0.04442862 \\ 
+        \bottomrule
+      \end{tabular}
+  \end{center}
+  \caption{Comportamiento de PSO para Himmelblau}
+  \label{tab:pso-himm}
+\end{table}
+
+\section{Resultados para Eggholder}
+
+En la figuras \ref{fig:ga-egg1} y \ref{fig:ga-egg2}se observa el desempeño de GA para Eggholder, donde de nuevo observamos el comportamiento estático con la codificación real, mientras que con la codificación binaria observamos un desempeño más regular y que en general se acerca a una solución cercana a la óptima.
+
+\medskip
+
+\begin{figure}[!h]
+  \minipage{0.50\textwidth}
+    \includegraphics[width=\linewidth]{bin_egg}
+    \caption{GA binario}
+    \label{fig:ga-egg1}
+  \endminipage\hfill
+  \minipage{0.50\textwidth}
+    \includegraphics[width=\linewidth]{real_egg}
+    \caption{GA Real}
+    \label{fig:ga-egg2}
+  \endminipage\hfill
+\end{figure}
+
+En la figuras \ref{fig:egg-de} y \ref{fig:egg-pso} tenemos el desempeño de DE y PSO respectivamente, en los cuales para ambos casos encontraron soluciones fuera del espacio de búsqueda, lo cual fue la razón para ajustar el número de individuos a 1000, pues fue la configuración con la que esto sucedió con menos frecuencia. PSO fue el algoritmo que se comportó más estable, teniendo su promedio dentro del espacio de búsqueda. Para ambos casos vemos una variación similar en las soluciones encontradas. (tablas \ref{tab:de-egg} y \ref{tab:pso-egg})
+
+\begin{figure}[!h]
+  \minipage{0.50\textwidth}
+    \includegraphics[width=\linewidth]{de_egg}
+    \caption{DE}
+    \label{fig:egg-de}
+  \endminipage\hfill
+    \minipage{0.50\textwidth}
+    \includegraphics[width=\linewidth]{pso_egg}
+    \caption{PSO}
+    \label{fig:egg-pso}
+  \endminipage\hfill
+  
+\end{figure}
+
+
+\begin{table}[!h]
+  \begin{center}
+    \begin{tabular}{cccc}
+      \toprule 
+        Muestra & \(\Sigma f(x)\) & \(\sigma\)  & \(\sigma^2\)  \\
+        \midrule
+        \rowcolor{black!20} E1 & -254330 & 0 & 0 \\
+        E2 & -251073.1 & 0 & 0 \\
+        \rowcolor{black!20} E3 & -392082.2 & 24.68532 & 609.3648\\
+        E4 & -268360.5 & 0.691349 & 0.4779634\\
+        \rowcolor{black!20} E5 & -392825.6 & 36.8634 & 1358.91 \\
+        E6 & -353568 & 24.2301 & 587.0977 \\
+        \rowcolor{black!20} E7 & -260246.7 & 0.05014597 & 0.002514618 \\
+        E8 & -269136.1 & 0 & 0\\
+        \rowcolor{black!20} E9 & -391590.1 & 25.66835 & 658.8639 \\
+        E10 & -258029.2 & 0. & 0 \\
+        \rowcolor{black!20} \(\mu\) & -1,023.59 & 17.92963 & 321.4717 \\ 
+        \bottomrule
+      \end{tabular}
+  \end{center}
+  \caption{Comportamiento de DE para Eggholder}
+  \label{tab:de-egg}
+\end{table}
+
+\begin{table}[!h]
+  \begin{center}
+    \begin{tabular}{cccc}
+      \toprule 
+        Muestra & \(\Sigma f(x)\) & \(\sigma\)  & \(\sigma^2\)  \\
+        \midrule
+        \rowcolor{black!20} E1 & -269424.6 & 1.66723 & 2.779659 \\
+        E2 & -269437 & 1.161445 & 1.348954\\
+        \rowcolor{black!20} E3 & -269455.7 & 0.1193114 & 0.01423522\\
+        E4 &  -269412.4 & 2.193421 & 4.811094\\
+        \rowcolor{black!20} E5 & -269126.4 & 15.88424 & 252.3089 \\
+        E6 & -269444.5 & 0.6601638 & 0.4358162 \\
+        \rowcolor{black!20} E7 & -391813.6 & 49.5586 & 2456.055 \\
+        E8 & -269348.5 & 3.05734 & 9.347327\\
+        \rowcolor{black!20} E9 & -269405.8 & 2.172272 & 4.718768 \\
+        E10 & -269430.8 & 1.408742 & 1.984555 \\
+        \rowcolor{black!20} \(\mu\) & -932.549 & 16.53422 & 273.3805 \\ 
+        \bottomrule
+      \end{tabular}
+  \end{center}
+  \caption{Comportamiento de PSO para Eggholder}
+  \label{tab:pso-egg}
+\end{table}
+
+\section{Conclusiones}
+
+Podemos observar que el desempeño en general es bueno para ambos algoritmos, pudiendo ser PSO el que tiene un comportamiento ligeramente mejor y más estable. Para estos experimentos se dejó el factor de inercia fijo, aunque es recomendable que se disminuya con cada generación para tener saltos más pequeños en la exploración. En DE podemos observar que los resultados presentados se obtuvieron con una alta probabilidad de cruza y con un factor de escalamiento pequeño, favoreciendo la diversidad de las soluciones auxiliares generadas.
+
+
+\end{document}
